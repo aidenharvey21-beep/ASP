@@ -25,8 +25,6 @@ client_scripts {
 
     'client/camera_bones.lua',
 
-    'client/stabilization.lua',
-
     'client/camera.lua',
 
     'client/controls.lua'
