@@ -372,7 +372,12 @@ CreateThread(function()
             SetUserRadioControlEnabled(false)
 
             ASP.Client.Camera.HandleRotation()
-            ASP.Client.Camera.HandleZoom()
+
+ASP.Client.Stabilization.Apply(
+    ASP.Client.Camera.State.Handle
+)
+
+ASP.Client.Camera.HandleZoom()
 
 
         end
