@@ -27,6 +27,8 @@ client_scripts {
 
     'client/camera.lua',
 
+    'client/camera_ui.lua',
+
     'client/controls.lua'
 
 }
