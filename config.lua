@@ -344,3 +344,32 @@ Config.Logging = {
 
     Prefix = "[AirSupportPro]"
 }
+Config.Camera = {
+
+    Enabled = true,
+
+    DefaultFOV = 45.0,
+
+    MinFOV = 5.0,
+
+    MaxFOV = 60.0,
+
+    ZoomSpeed = 2.0,
+
+    RotationSpeed = 4.0,
+
+    Stabilization = true,
+
+    AttachBone = "chassis",
+
+    CameraOffset = {
+
+        x = 0.0,
+
+        y = 0.0,
+
+        z = 0.0
+
+    }
+
+}
