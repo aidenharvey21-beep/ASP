@@ -1,0 +1,98 @@
+```ini
+#========================================================#
+# AirSupportPro
+# Editor Configuration
+# Version: 0.1.0
+#
+# Keeps formatting consistent across contributors.
+# Compatible with VS Code, JetBrains, Sublime, etc.
+#========================================================#
+
+
+# Default settings for all files
+root = true
+
+
+[*]
+
+# File encoding
+charset = utf-8
+
+
+# Line endings
+end_of_line = lf
+
+
+# Remove whitespace at end of lines
+trim_trailing_whitespace = true
+
+
+# Ensure files end with a newline
+insert_final_newline = true
+
+
+
+#========================================================#
+# Lua Files
+#========================================================#
+
+[*.lua]
+
+indent_style = space
+
+indent_size = 4
+
+
+# Keep Lua files readable
+max_line_length = 120
+
+
+
+#========================================================#
+# JSON / Web Files
+#========================================================#
+
+[*.json]
+
+indent_style = space
+
+indent_size = 4
+
+
+
+[*.html]
+
+indent_style = space
+
+indent_size = 4
+
+
+
+[*.css]
+
+indent_style = space
+
+indent_size = 4
+
+
+
+[*.js]
+
+indent_style = space
+
+indent_size = 4
+
+
+
+#========================================================#
+# Markdown Documentation
+#========================================================#
+
+[*.md]
+
+trim_trailing_whitespace = false
+
+indent_style = space
+
+indent_size = 4
+```
