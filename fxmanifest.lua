@@ -18,10 +18,17 @@ shared_scripts {
 
 
 client_scripts {
+
     'client/utilities.lua',
+
     'client/main.lua',
+
+    'client/camera_bones.lua',
+
     'client/camera.lua',
+
     'client/controls.lua'
+
 }
 
 
