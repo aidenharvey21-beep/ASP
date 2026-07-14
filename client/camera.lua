@@ -373,11 +373,7 @@ CreateThread(function()
 
             ASP.Client.Camera.HandleRotation()
 
-ASP.Client.Stabilization.Apply(
-    ASP.Client.Camera.State.Handle
-)
-
-ASP.Client.Camera.HandleZoom()
+            ASP.Client.Camera.HandleZoom()
 
 
         end
