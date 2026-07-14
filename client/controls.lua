@@ -1,4 +1,3 @@
-```lua
 --========================================================--
 -- AirSupportPro
 -- Client Control System
@@ -81,7 +80,11 @@ function ASP.Client.Controls.ToggleCamera()
 
 
 
-    if ASP.Client.Camera.State.Active then
+    if ASP.Client.Camera
+    and ASP.Client.Camera.State
+    and ASP.Client.Camera.State.Active then
+
+
 
 
         ASP.Client.Camera.Stop()
@@ -358,4 +361,3 @@ end)
 ASP.Utils.Debug(
     "Controls module loaded"
 )
-```
