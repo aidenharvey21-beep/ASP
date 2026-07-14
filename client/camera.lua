@@ -1,23 +1,8 @@
-```lua
 --========================================================--
 -- AirSupportPro
 -- Helicopter Camera System
 -- Version: 0.2.0
---
--- Handles:
---  - Helicopter camera creation
---  - Camera attachment
---  - Zoom control
---  - Gimbal movement
---  - Camera lifecycle
---
--- Future integrations:
---  - FLIR
---  - Target tracking
---  - Spotlight
---  - Orbit system
 --========================================================--
-
 
 ASP = ASP or {}
 
@@ -25,11 +10,6 @@ ASP.Client = ASP.Client or {}
 
 ASP.Client.Camera = ASP.Client.Camera or {}
 
-
-
---========================================================--
--- CAMERA STATE
---========================================================--
 
 ASP.Client.Camera.State = {
 
@@ -39,44 +19,24 @@ ASP.Client.Camera.State = {
 
     Helicopter = nil,
 
-
-    FOV = Config.Camera.DefaultFOV,
-
-
-    Rotation = {
-
-        x = 0.0,
-
-        y = 0.0,
-
-        z = 0.0
-
-    }
+    FOV = Config.Camera.DefaultFOV
 
 }
 
 
 
 --========================================================--
--- CREATE CAMERA
+-- START CAMERA
 --========================================================--
 
----Creates and activates helicopter camera.
----@param helicopter number
----@return boolean
 function ASP.Client.Camera.Start(helicopter)
 
 
     if not DoesEntityExist(helicopter) then
 
-        ASP.Client.Utils.ASPNotify(
-            "No helicopter detected"
-        )
-
         return false
 
     end
-
 
 
     if ASP.Client.Camera.State.Active then
@@ -87,15 +47,13 @@ function ASP.Client.Camera.Start(helicopter)
 
 
 
-    local camera =
-        CreateCam(
-            "DEFAULT_SCRIPTED_CAMERA",
-            true
-        )
+    local cam = CreateCam(
+        "DEFAULT_SCRIPTED_CAMERA",
+        true
+    )
 
 
-
-    if not camera then
+    if not cam then
 
         return false
 
@@ -103,36 +61,25 @@ function ASP.Client.Camera.Start(helicopter)
 
 
 
-    ASP.Client.Camera.State.Handle =
-        camera
+    ASP.Client.Camera.State.Handle = cam
 
+    ASP.Client.Camera.State.Helicopter = helicopter
 
-    ASP.Client.Camera.State.Helicopter =
-        helicopter
-
-
-
-    ASP.Client.Camera.State.Active =
-        true
-
-
-
-    ASP.Client.Camera.State.FOV =
-        Config.Camera.DefaultFOV
+    ASP.Client.Camera.State.Active = true
 
 
 
     AttachCamToEntity(
 
-        camera,
+        cam,
 
         helicopter,
 
-        Config.Camera.CameraOffset.x,
+        0.0,
 
-        Config.Camera.CameraOffset.y,
+        2.8,
 
-        Config.Camera.CameraOffset.z,
+        -1.5,
 
         true
 
@@ -142,9 +89,9 @@ function ASP.Client.Camera.Start(helicopter)
 
     SetCamFov(
 
-        camera,
+        cam,
 
-        ASP.Client.Camera.State.FOV
+        Config.Camera.DefaultFOV
 
     )
 
@@ -166,11 +113,6 @@ function ASP.Client.Camera.Start(helicopter)
 
 
 
-    ASP.Client.State.Camera =
-        camera
-
-
-
     ASP.Client.Utils.ASPNotify(
         "Helicopter camera activated"
     )
@@ -186,7 +128,6 @@ end
 -- STOP CAMERA
 --========================================================--
 
----Stops and destroys helicopter camera.
 function ASP.Client.Camera.Stop()
 
 
@@ -198,277 +139,233 @@ function ASP.Client.Camera.Stop()
 
 
 
-    local camera =
-        ASP.Client.Camera.State.Handle
+    RenderScriptCams(
+
+        false,
+
+        true,
+
+        500,
+
+        true,
+
+        true
+
+    )
 
 
 
-    if camera then
+    DestroyCam(
 
-        RenderScriptCams(
+        ASP.Client.Camera.State.Handle,
 
-            false,
-
-            true,
-
-            500,
-
-            true,
-
-            true
-
-        )
-
-
-        DestroyCam(
-
-            camera,
-
-            false
-
-        )
-
-    end
-
-
-
-    ASP.Client.Camera.State = {
-
-        Active = false,
-
-        Handle = nil,
-
-        Helicopter = nil,
-
-        FOV = Config.Camera.DefaultFOV,
-
-        Rotation = {
-
-            x = 0.0,
-
-            y = 0.0,
-
-            z = 0.0
-
-        }
-
-    }
-
-
-
-    ASP.Client.State.CameraActive =
         false
 
+    )
 
-    ASP.Client.State.Camera =
-        nil
+
+
+    ASP.Client.Camera.State.Active = false
+
+    ASP.Client.Camera.State.Handle = nil
+
+    ASP.Client.Camera.State.Helicopter = nil
+
 
 
     ASP.Client.Utils.ASPNotify(
         "Helicopter camera disabled"
     )
 
+
 end
 
 
 
 --========================================================--
--- CAMERA ROTATION
+-- CAMERA MOVEMENT
 --========================================================--
 
 function ASP.Client.Camera.HandleRotation()
 
-
     if not ASP.Client.Camera.State.Active then
-
         return
-
     end
 
 
+    local cam = ASP.Client.Camera.State.Handle
 
-    local rotation =
-        ASP.Client.Camera.State.Rotation
-
-
-
-    local speed =
-        Config.Camera.RotationSpeed
-
-
-
-    if IsControlPressed(
-        0,
-        241
-    ) then
-
-        rotation.x =
-            rotation.x + speed
-
+    if not cam then
+        return
     end
 
 
+    local rotation = GetCamRot(cam, 2)
 
-    if IsControlPressed(
-        0,
-        242
-    ) then
 
-        rotation.x =
-            rotation.x - speed
+    local horizontal =
+        GetDisabledControlNormal(0, 1)
 
+    local vertical =
+        GetDisabledControlNormal(0, 2)
+
+
+    local sensitivity = 10.0
+
+
+    local newZ =
+        rotation.z - (horizontal * sensitivity)
+
+
+    local newX =
+        rotation.x - (vertical * sensitivity)
+
+
+
+    if newX > 60.0 then
+        newX = 60.0
     end
 
 
-
-    if IsControlPressed(
-        0,
-        1
-    ) then
-
-        rotation.z =
-            rotation.z - speed
-
-    end
-
-
-
-    if IsControlPressed(
-        0,
-        2
-    ) then
-
-        rotation.z =
-            rotation.z + speed
-
+    if newX < -60.0 then
+        newX = -60.0
     end
 
 
 
     SetCamRot(
 
-        ASP.Client.Camera.State.Handle,
+        cam,
 
-        rotation.x,
+        newX,
 
         rotation.y,
 
-        rotation.z,
+        newZ,
 
         2
 
     )
 
 end
-
-
-
 --========================================================--
--- ZOOM SYSTEM
+-- CAMERA ZOOM
 --========================================================--
 
 function ASP.Client.Camera.HandleZoom()
 
-
     if not ASP.Client.Camera.State.Active then
-
         return
+    end
+
+
+    local cam = ASP.Client.Camera.State.Handle
+
+    if not cam then
+        return
+    end
+
+
+    local fov = GetCamFov(cam)
+
+
+    -- Read mouse wheel while controls are disabled
+    local zoomIn = IsDisabledControlJustPressed(0, 241)
+    local zoomOut = IsDisabledControlJustPressed(0, 242)
+
+
+    if zoomIn then
+
+        fov = fov - Config.Camera.ZoomSpeed
+
+    end
+
+
+    if zoomOut then
+
+        fov = fov + Config.Camera.ZoomSpeed
 
     end
 
 
 
-    local fov =
-        ASP.Client.Camera.State.FOV
+    if fov < Config.Camera.MinFOV then
+
+        fov = Config.Camera.MinFOV
+
+    end
 
 
+    if fov > Config.Camera.MaxFOV then
 
-    if IsControlPressed(
-        0,
-        241
-    ) then
-
-        fov =
-            fov - Config.Camera.ZoomSpeed
+        fov = Config.Camera.MaxFOV
 
     end
 
 
 
-    if IsControlPressed(
-        0,
-        242
-    ) then
-
-        fov =
-            fov + Config.Camera.ZoomSpeed
-
-    end
-
-
-
-    fov =
-        math.max(
-
-            Config.Camera.MinFOV,
-
-            math.min(
-
-                fov,
-
-                Config.Camera.MaxFOV
-
-            )
-
-        )
-
-
-
-    ASP.Client.Camera.State.FOV =
-        fov
-
-
-
-    SetCamFov(
-
-        ASP.Client.Camera.State.Handle,
-
-        fov
-
-    )
+    SetCamFov(cam, fov)
 
 end
-
-
-
 --========================================================--
--- CAMERA THREAD
+-- CAMERA LOOP
 --========================================================--
 
 CreateThread(function()
 
-
     while true do
 
-
-        local wait =
-            1000
-
+        local wait = 1000
 
 
         if ASP.Client.Camera.State.Active then
 
-
             wait = 0
 
 
-            ASP.Client.Camera.HandleRotation()
+            -- Disable GTA weapon/radio controls while camera is active
 
+            -- Weapon cycling
+            DisableControlAction(0, 14, true)
+            DisableControlAction(0, 15, true)
+
+            -- Weapon wheel
+            DisableControlAction(0, 37, true)
+
+            -- Weapon selection
+            DisableControlAction(0, 16, true)
+            DisableControlAction(0, 17, true)
+
+            -- Vehicle weapon selection
+            DisableControlAction(0, 84, true)
+            DisableControlAction(0, 85, true)
+
+            -- Radio wheel / station selection
+            DisableControlAction(0, 81, true)
+            DisableControlAction(0, 82, true)
+
+            -- Mouse wheel
+            DisableControlAction(0, 241, true)
+            DisableControlAction(0, 242, true)
+
+            DisablePlayerFiring(PlayerId(), true)
+
+
+            -- Hide GTA weapon/radio UI
+
+
+            HideHudComponentThisFrame(14)
+            HideHudComponentThisFrame(19) -- weapon wheel
+            HideHudComponentThisFrame(20) -- weapon wheel stats
+            HideHudComponentThisFrame(22) -- weapon icon
+
+            SetUserRadioControlEnabled(false)
+
+            ASP.Client.Camera.HandleRotation()
             ASP.Client.Camera.HandleZoom()
 
 
         end
-
 
 
         Wait(wait)
@@ -479,46 +376,6 @@ end)
 
 
 
---========================================================--
--- EXPORTS
---========================================================--
-
-exports(
-    "StartCamera",
-    function()
-
-        local heli =
-            ASP.Client.GetHelicopter()
-
-
-        if heli then
-
-            return ASP.Client.Camera.Start(
-                heli
-            )
-
-        end
-
-
-        return false
-
-    end
-)
-
-
-
-exports(
-    "StopCamera",
-    function()
-
-        ASP.Client.Camera.Stop()
-
-    end
-)
-
-
-
 ASP.Utils.Debug(
     "Camera module loaded"
 )
-```
