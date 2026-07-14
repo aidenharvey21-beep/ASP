@@ -69,6 +69,15 @@ function ASP.Client.Camera.Start(helicopter)
 
 
 
+   local attached =
+    ASP.Client.CameraBones.Attach(
+        cam,
+        helicopter
+    )
+
+
+if not attached then
+
     AttachCamToEntity(
 
         cam,
@@ -85,6 +94,7 @@ function ASP.Client.Camera.Start(helicopter)
 
     )
 
+end
 
 
     SetCamFov(
