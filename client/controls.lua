@@ -2,10 +2,13 @@
 --========================================================--
 -- AirSupportPro
 -- Client Control System
--- Version: 0.1.0
+-- Version: 0.2.0
 --
--- Handles player input and keybind registration.
--- This file manages ASP user controls.
+-- Handles:
+--  - Camera controls
+--  - Orbit controls
+--  - Hover controls
+--  - Keybind management
 --========================================================--
 
 
@@ -31,21 +34,18 @@ ASP.Client.Controls.Keys = {
 
     ToggleHover = 74,        -- H
 
-    IncreaseRadius = 10,     -- PAGE UP
+    IncreaseRadius = 10,     -- Page Up
 
-    DecreaseRadius = 11      -- PAGE DOWN
+    DecreaseRadius = 11      -- Page Down
 
 }
 
 
 
 --========================================================--
--- CONTROL CHECK
+-- INPUT CHECK
 --========================================================--
 
----Checks whether a configured control was pressed.
----@param control number
----@return boolean
 function ASP.Client.Controls.Pressed(control)
 
     return IsControlJustPressed(
@@ -58,32 +58,45 @@ end
 
 
 --========================================================--
--- CAMERA CONTROL
+-- CAMERA TOGGLE
 --========================================================--
 
 function ASP.Client.Controls.ToggleCamera()
 
-    local state =
-        ASP.Client.State
+
+    local active, heli =
+        ASP.Client.Utils.CanUseAirSupport()
 
 
-    state.CameraActive =
-        not state.CameraActive
 
-
-    if state.CameraActive then
+    if not active then
 
         ASP.Client.Utils.ASPNotify(
-            "Camera activated"
+            "You must be in an authorized helicopter"
         )
+
+        return
+
+    end
+
+
+
+    if ASP.Client.Camera.State.Active then
+
+
+        ASP.Client.Camera.Stop()
+
 
     else
 
-        ASP.Client.Utils.ASPNotify(
-            "Camera disabled"
+
+        ASP.Client.Camera.Start(
+            heli
         )
 
+
     end
+
 
 end
 
@@ -95,16 +108,13 @@ end
 
 function ASP.Client.Controls.ToggleOrbit()
 
-    local state =
-        ASP.Client.State
 
-
-    state.OrbitActive =
-        not state.OrbitActive
+    ASP.Client.State.OrbitActive =
+        not ASP.Client.State.OrbitActive
 
 
 
-    if state.OrbitActive then
+    if ASP.Client.State.OrbitActive then
 
         ASP.Client.Utils.ASPNotify(
             "Orbit mode enabled"
@@ -123,35 +133,18 @@ end
 
 
 --========================================================--
--- TARGET CONTROL
---========================================================--
-
-function ASP.Client.Controls.LockTarget()
-
-    ASP.Client.Utils.ASPNotify(
-        "Target lock system not yet installed"
-    )
-
-end
-
-
-
---========================================================--
 -- HOVER CONTROL
 --========================================================--
 
 function ASP.Client.Controls.ToggleHover()
 
-    local state =
-        ASP.Client.State
 
-
-    state.HoverActive =
-        not state.HoverActive
+    ASP.Client.State.HoverActive =
+        not ASP.Client.State.HoverActive
 
 
 
-    if state.HoverActive then
+    if ASP.Client.State.HoverActive then
 
         ASP.Client.Utils.ASPNotify(
             "Hover hold enabled"
@@ -170,26 +163,50 @@ end
 
 
 --========================================================--
--- ORBIT ADJUSTMENT
+-- TARGET LOCK
+--========================================================--
+
+function ASP.Client.Controls.LockTarget()
+
+    ASP.Client.Utils.ASPNotify(
+        "Target tracking unavailable"
+    )
+
+end
+
+
+
+--========================================================--
+-- ORBIT RADIUS
 --========================================================--
 
 function ASP.Client.Controls.IncreaseRadius()
+
 
     local orbit =
         ASP.Client.State.Orbit
 
 
+
     orbit.Radius =
         math.min(
+
             orbit.Radius + 25,
+
             Config.Orbit.MaximumRadius
+
         )
 
 
+
     ASP.Client.Utils.ASPNotify(
+
         "Orbit radius: "
-        .. math.floor(orbit.Radius)
-        .. "m"
+        ..
+        math.floor(orbit.Radius)
+        ..
+        "m"
+
     )
 
 end
@@ -198,21 +215,31 @@ end
 
 function ASP.Client.Controls.DecreaseRadius()
 
+
     local orbit =
         ASP.Client.State.Orbit
 
 
+
     orbit.Radius =
         math.max(
+
             orbit.Radius - 25,
+
             Config.Orbit.MinimumRadius
+
         )
 
 
+
     ASP.Client.Utils.ASPNotify(
+
         "Orbit radius: "
-        .. math.floor(orbit.Radius)
-        .. "m"
+        ..
+        math.floor(orbit.Radius)
+        ..
+        "m"
+
     )
 
 end
@@ -220,10 +247,11 @@ end
 
 
 --========================================================--
--- INPUT THREAD
+-- MAIN CONTROL THREAD
 --========================================================--
 
 CreateThread(function()
+
 
     while true do
 
@@ -232,17 +260,21 @@ CreateThread(function()
             1000
 
 
-        if ASP.Client.State
-        and ASP.Client.State.CurrentHelicopter then
+
+        if ASP.Client.State.CurrentHelicopter then
+
 
             wait = 0
+
 
 
             if ASP.Client.Controls.Pressed(
                 ASP.Client.Controls.Keys.ToggleCamera
             ) then
 
+
                 ASP.Client.Controls.ToggleCamera()
+
 
             end
 
@@ -252,17 +284,9 @@ CreateThread(function()
                 ASP.Client.Controls.Keys.ToggleOrbit
             ) then
 
+
                 ASP.Client.Controls.ToggleOrbit()
 
-            end
-
-
-
-            if ASP.Client.Controls.Pressed(
-                ASP.Client.Controls.Keys.LockTarget
-            ) then
-
-                ASP.Client.Controls.LockTarget()
 
             end
 
@@ -272,7 +296,21 @@ CreateThread(function()
                 ASP.Client.Controls.Keys.ToggleHover
             ) then
 
+
                 ASP.Client.Controls.ToggleHover()
+
+
+            end
+
+
+
+            if ASP.Client.Controls.Pressed(
+                ASP.Client.Controls.Keys.LockTarget
+            ) then
+
+
+                ASP.Client.Controls.LockTarget()
+
 
             end
 
@@ -282,7 +320,9 @@ CreateThread(function()
                 ASP.Client.Controls.Keys.IncreaseRadius
             ) then
 
+
                 ASP.Client.Controls.IncreaseRadius()
+
 
             end
 
@@ -292,12 +332,15 @@ CreateThread(function()
                 ASP.Client.Controls.Keys.DecreaseRadius
             ) then
 
+
                 ASP.Client.Controls.DecreaseRadius()
+
 
             end
 
 
         end
+
 
 
         Wait(wait)
@@ -309,67 +352,10 @@ end)
 
 
 --========================================================--
--- KEY MAPPING SUPPORT
+-- RESOURCE DEBUG
 --========================================================--
 
-RegisterKeyMapping(
-    "asp_camera",
-    "AirSupportPro: Toggle Camera",
-    "keyboard",
-    Config.Controls.ToggleCamera.Key
-)
-
-
-RegisterCommand(
-    "asp_camera",
-    function()
-
-        ASP.Client.Controls.ToggleCamera()
-
-    end
-)
-
-
-
-RegisterKeyMapping(
-    "asp_orbit",
-    "AirSupportPro: Toggle Orbit",
-    "keyboard",
-    Config.Controls.ToggleOrbit.Key
-)
-
-
-RegisterCommand(
-    "asp_orbit",
-    function()
-
-        ASP.Client.Controls.ToggleOrbit()
-
-    end
-)
-
-
-
-RegisterKeyMapping(
-    "asp_hover",
-    "AirSupportPro: Toggle Hover",
-    "keyboard",
-    Config.Controls.ToggleHover.Key
-)
-
-
-RegisterCommand(
-    "asp_hover",
-    function()
-
-        ASP.Client.Controls.ToggleHover()
-
-    end
-)
-
-
-
 ASP.Utils.Debug(
-    "Client controls loaded"
+    "Controls module loaded"
 )
 ```
